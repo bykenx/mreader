@@ -1,61 +1,68 @@
 <template>
   <div class="book-shelf">
-    <book-item 
-      v-for="{no, name, pic} in books" 
-      :cover="pic" 
-      :name="name"
-      :key="no">
-    </book-item>
+    <div 
+      v-for='book in books'
+      class='book-item'
+      :key='book.id'
+      @click='click(book)'>
+      <div class="cover"><img :src="book.cover"></div>
+      <div class="name">{{ book.name }}</div>
+    </div>
   </div>
 </template>
 
 <script>
-// https://vuematerial.io/assets/examples/card-sky.jpg
 export default {
-  'name': 'BookShelf',
-  data: () => ({
-    mode: 'list', // grid
-    books: [{
-      no: 1,
-      name: '绝世唐门',
-      pic: 'https://vuematerial.io/assets/examples/card-sky.jpg'
+  name: 'BookShelf',
+  data () {
+    return {
+      books: []
+    }
+  },
+  props: {
+    value: {
+      type: [Array, Object],
+      required: true
     },
-    {
-      no: 2,
-      name: '斗罗大陆',
-      pic: 'https://vuematerial.io/assets/examples/card-sky.jpg'
-    },
-    {
-      no: 3,
-      name: '斗罗大陆',
-      pic: 'https://vuematerial.io/assets/examples/card-sky.jpg'
-    },
-    {
-      no: 4,
-      name: '斗罗大陆',
-      pic: 'https://vuematerial.io/assets/examples/card-sky.jpg'
-    },
-    {
-      no: 5,
-      name: '斗罗大陆',
-      pic: 'https://vuematerial.io/assets/examples/card-sky.jpg'
-    },
-    {
-      no: 6,
-      name: '斗罗大陆',
-      pic: 'https://vuematerial.io/assets/examples/card-sky.jpg'
-    },
-    {
-      no: 7,
-      name: '斗罗大陆',
-      pic: 'https://vuematerial.io/assets/examples/card-sky.jpg'
-    }]
-  })
+    clicked: {
+      type: Function,
+      required: false
+    }
+  },
+  watch: {
+    value (newValue) {
+      this.books = newValue
+    }
+  },
+  methods: {
+    click (which) {
+      if (this.clicked && this.clicked instanceof Function) {
+        this.clicked(which.$id)
+      }
+    }
+  }
 }
 </script>
 
-<style lang="css">
+<style>
   .book-item {
-    cursor: pointer;
+    padding: 20px;
+    display: inline-block;
+    cursor: pointer
+  }
+  .book-item .cover {
+    width: 150px;
+    height: 200px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.117647), 
+                0 1px 4px rgba(0, 0, 0, 0.117647)
+  }
+  .book-item .cover img {
+    width: 100%;
+    height: 100%
+  }
+  .book-item .name {
+    height: 30px;
+    line-height: 30px;
+    text-align: center
   }
 </style>

@@ -1,19 +1,28 @@
-export default {
-    getItem: (key) => {
-        let local = window.localStorage
-        let result = local.getItem(key)
-        return result ? JSON.parse(result) : null
-    },
-    setItem: (key, value) => {
-        if (!value) {
-            return
-        }
-        value = JSON.stringify(value)
-        let local = window.localStorage
-        try {
-            local.setItem(key, value)
-        } catch (e) {
+import store from './internal/localstorage'
+import { readFile } from './internal/util'
+import Book from './Book'
+import BookSource from './BookSource'
+import BookCache from './BookCache'
 
-        }
+/**
+ * 从JSON文件读取源信息的工具函数
+ * @param {String} filename
+ */
+function readBookSourceFromJsonFile (filename) {
+  readFile(filename).then(data => {
+    let configs = JSON.parse(data)
+    for (let i in configs) {
+      let source = new BookSource(configs[i])
+      BookSource.save(source)
     }
+  })
+}
+
+export {
+  store,
+  Book,
+  BookSource,
+  BookCache,
+  readFile,
+  readBookSourceFromJsonFile
 }

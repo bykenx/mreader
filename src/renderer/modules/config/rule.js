@@ -1,153 +1,80 @@
+/*
+ * 本模块为配置模块的子模块，将负责用户配置的源转化为规则对象
+ * 本模块的生成内容可供爬虫模块读取规则并按其规则解析
+ * author: byken
+ * date: 2019.02.02
+ */
+/* eslint-disable */
 function isEmpty (obj) {
-    if (obj === undefined || obj === null) {
-        return true
-    }
-    return false
+  if (obj === undefined || obj === null) {
+    return true
+  }
+  return false
 }
 
 function hasOWn (e, r) {
-    return Object.prototype.hasOwnProperty.call(e, r)
+  return Object.prototype.hasOwnProperty.call(e, r)
 }
 
 function match (s, m) {
-    return String.prototype.match.call(s, m)
+  return String.prototype.match.call(s, m)
 }
 
-function lengthEqual(obj, len) {
-    if (isEmpty(obj)) {
-        return false
-    }
-    if (!hasOWn(obj, 'length')) {
-        return false
-    }
-    return obj.length === len
+function lengthEqual (obj, len) {
+  if (isEmpty(obj)) {
+    return false
+  }
+  if (!hasOWn(obj, 'length')) {
+    return false
+  }
+  return obj.length === len
+}
+const flags = {
+  // selector
+  sels: {
+    SEL_TAG: 0,
+    SEL_CLASS: 1,
+    SEL_ID: 2,
+    SEL_VAL: 3,
+    SEL_UNKNOWN: 4
+  },
+  // relation
+  relations: {
+    RELATION_OR: 4,
+    RELATION_NEXT: 5
+  },
+  // instruction
+  ins: {
+    INS_STARTSWITH: 6,
+    INS_ENDSWITH: 7,
+    INS_CONTAINS: 8,
+    INS_EQUALS: 9
+  }
 }
 
-var Rule = {
-    // selector
-    sels: {
-        SEL_TAG: 0,
-        SEL_CLASS: 1,
-        SEL_ID: 2,
-        SEL_UNKNOWN: 3
-    },
-    // relation
-    relations: {
-        RELATION_OR: 4,
-        RELATION_NEXT: 5
-    },
-    // instruction
-    ins: {
-        INS_STARTSWITH: 6,
-        INS_ENDSWITH: 7,
-        INS_CONTAINS: 8,
-        INS_EQUALS: 9
-    }
-}
-
-
-/**
- * @param {string} str
- * @returns {[string, number]}
- */
-Rule._rule_class = function (str) {
-    var remains = str.substring(5)
-    var ins = this._ins(remains[0])
-    remains = remains.substring(1)
-    remains = remains.split('.')
-    var classname = remains[0]
-    var idx = remains[1] || 0
-    return ['[class' + ins + classname + ']', idx]
-}
-
-/**
- * @param {string} str
- * @returns {[string, number]}
- */
-Rule._rule_id = function (str) {
-    var remains = str.substring(2)
-    var ins = this._ins(remains[0])
-    var _id = remains.substring(1)
-    return ['[id' + ins + _id + ']', 0]
-}
-
-/**
- * @param {string} str
- * @returns {[string, number]}
- */
-Rule._rule_tag = function (str) {
-    var remains = str.substring(3)
-    var ins = remains[0]
-    if (!(ins === '.')) {
-        throw Error('not support ins <' + ins + '>.')
-    }
-    remains = remains.substring(1)
-    remains = remains.split('.')
-    var tagname = remains[0]
-    var idx = remains[1] || 0
-    return [tagname, idx]
-}
-
-/**
- * @param {string} str
- * @returns {[string, number]}
- */
-Rule._rule_unknown = function (str) {
-    return ['', 0]
-}
-
-var RuleGenerator = {
-    sels: {
-        SEL_TAG: 'tag',
-        SEL_CLASS: 'class',
-        SEL_ID: 'id',
-        SEL_VAL: 'val'
-    },
-    // relation
-    relations: {
-        RELATION_OR: '|',
-        RELATION_NEXT: '@'
-    },
-    relation_weight: [
-        'RELATION_NEXT',
-        'RELATION_OR'
-    ],
-    // instructions
-    ins: {
-        INS_STARTSWITH: '^',
-        INS_CONTAINS: '~',
-        INS_ENDSWITH: '$',
-        INS_EQUALS: '.'
-    }
-}
-
-Rule.isRelation = function (obj) {
-    return obj instanceof Relation
-} 
-
-Rule.isRuleUnit = function (obj) {
-    return obj instanceof RuleUnit
-}
-
-RuleGenerator.generate = function (str) {
-    return Relation.split(str)
-}
-
-RuleGenerator._ins = function (chr) {
-    var ins = RuleGenerator.ins,
-        _ins = Rule.ins
-    switch (chr) {
-    case ins.INS_STARTSWITH:
-        return _ins.INS_STARTSWITH
-    case ins.INS_CONTAINS:
-        return _ins.INS_CONTAINS
-    case ins.INS_ENDSWITH:
-        return _ins.INS_ENDSWITH
-    case ins.INS_EQUALS:
-        return _ins.INS_EQUALS
-    default:
-        return null
-    }
+const RuleGeneratorConfig = {
+  sels: {
+    SEL_TAG: '^(tag)',
+    SEL_CLASS: '^(class)',
+    SEL_ID: '^(id)',
+    SEL_VAL: '^(text|href|src|html)$'
+  },
+  // relation
+  relations: {
+    RELATION_OR: '|',
+    RELATION_NEXT: '@'
+  },
+  relation_weight: [
+    'RELATION_NEXT',
+    'RELATION_OR'
+  ],
+  // instructions
+  ins: {
+    INS_STARTSWITH: '^',
+    INS_CONTAINS: '~',
+    INS_ENDSWITH: '$',
+    INS_EQUALS: '.'
+  }
 }
 
 /**
@@ -155,90 +82,209 @@ RuleGenerator._ins = function (chr) {
  * @param {string} part
  * @returns {string}
  */
-Rule._ins = function (str) {
-    var ins = this.ins
-    switch(str) {
+function type2Ins (str) {
+  var ins = this.ins
+  switch (str) {
     case ins.INS_CONTAINS:
-        return '*='
+      return '*='
     case ins.INS_STARTSWITH:
-        return '^='
+      return '^='
     case ins.INS_ENDSWITH:
-        return '$='
+      return '$='
     case ins.INS_EQUALS:
-        return '='
-    }
+      return '='
+  }
 }
 
-var RuleUnit = function RuleUnit (_type, ins, value, idx) {
+function ins2Type (chr) {
+  let ins = RuleGeneratorConfig.ins
+  let _ins = flags.ins
+  switch (chr) {
+    case ins.INS_STARTSWITH:
+      return _ins.INS_STARTSWITH
+    case ins.INS_CONTAINS:
+      return _ins.INS_CONTAINS
+    case ins.INS_ENDSWITH:
+      return _ins.INS_ENDSWITH
+    case ins.INS_EQUALS:
+      return _ins.INS_EQUALS
+    default:
+      return null
+  }
+}
+
+function sel2Type (str) {
+  let sels = RuleGeneratorConfig.sels
+  let _sels = flags.sels
+  for (let i in sels) {
+    if (match(str, sels[i])) {
+      return _sels[i]
+    }
+  }
+  return null
+}
+
+function type2Sel (_type) {
+  let sel = RuleGeneratorConfig.ins
+  let _sel = flags.ins
+  for (let i of _sel) {
+    if (_sel[i] === _type) {
+      return sel[i]
+    }
+  }
+  return null
+}
+
+class RuleUnit {
+  constructor (_type, ins, value, idx) {
     this._type = _type
-    this.ins = ins 
+    this.ins = ins
     this.value = value
-    this.idx = idx || 0
-} 
+    this.idx = isEmpty(idx) ? null : idx
+    this._tag = 'ruleunit'
+  }
+  getType () {
+    return this._type
+  }
+}
+
+/**
+ * @param {string} str
+ * @returns {[string, number]}
+ */
+RuleUnit._rule_unknown = function (str) {
+  return ['', 0]
+}
 
 RuleUnit.get = function (str) {
-    var rule = this._build(str)
-    if (!rule) {
-        rule = this._build_unknown()
-    }
-    return rule
+  var rule = this._build(str)
+  if (!rule) {
+    rule = this._build_unknown()
+  }
+  return rule
 }
 
 RuleUnit._build = function (str) {
-    var sel, ins, val, idx = 0,
-        sels = RuleGenerator.sels
-    for (var i in sels) {
-        if (match(str, sels[i])) {
-            var remains = str
-            sel = sels[i]
-            remains = remains.slice(sel.length)
-            if (remains === '') {
-                throw Error('illegal ruleunit.')
-            }
-            ins = RuleGenerator._ins(remains[0])
-            if (!ins) {
-                throw Error('unspport ins.')
-            }
-            remains = remains.slice(1).split('.')
-            val = remains[0]
-            idx = ~~remains[1]
-            return new RuleUnit(sel, ins, val, idx)
+  var remains = str
+  var sel = null
+  var ins = null
+  var val = null
+  var idx = 0
+  var tmp
+  var sels = RuleGeneratorConfig.sels
+  var _sels = flags.sels
+  for (let i in sels) {
+    if ((tmp = match(str, sels[i]))) {
+      sel = _sels[i]
+      if (sels[i] === sels.SEL_VAL) {
+        val = tmp[1]
+      } else {
+        remains = remains.slice(tmp[1].length)
+        if (remains === '') {
+          throw Error('illegal ruleunit.')
         }
+        ins = ins2Type(remains[0])
+        if (!ins) {
+          throw Error('unspport ins.')
+        }
+        remains = remains.slice(1).split('.')
+        val = remains[0]
+        idx = ~~remains[1]
+      }
+      return new RuleUnit(sel, ins, val, idx)
     }
-    return null
+  }
+  return null
 }
 
 RuleUnit._build_unknown = function () {
+  return null
 }
 
+/**
+ * @param {number} _type
+ * @param {Array} ary
+ */
 var Relation = function Relation (_type, ary) {
-    this._type = _type
-    this.ary = ary
+  this._type = _type
+  this.ary = ary
+  this._tag = 'relation'
 }
 
 Relation.split = function (part) {
-    var weight = RuleGenerator.relation_weight,
-        relations = RuleGenerator.relations
-    function _split (_part) {
-        var _parts = [],
-            i = 0
-        for (; i < weight.length; i++) {
-            _parts = _part.split(relations[weight[i]])
-            if (!lengthEqual(_parts, 1)) {
-                break
-            }
-        }
-        if (lengthEqual(_parts, 1)) {
-            return RuleUnit.get(_parts[0])
-        } else {
-            var parts = []
-            for (var j in _parts) {
-                parts.push(_split(_parts[j]))
-            }
-            return new Relation(relations[weight[i]], parts)
-        }
+  var weight = RuleGeneratorConfig.relation_weight
+  var relations = RuleGeneratorConfig.relations
+  var _relations = flags.relations
+  function _split (_part) {
+    var _parts = []
+    var i = weight.length - 1
+    // 权重大的最后拆分
+    for (; i >= 0; i--) {
+      _parts = _part.split(relations[weight[i]])
+      if (!lengthEqual(_parts, 1)) {
+        break
+      }
     }
-    return _split(part)
+    if (lengthEqual(_parts, 1)) {
+      return RuleUnit.get(_parts[0])
+    } else {
+      var parts = []
+      for (var j in _parts) {
+        parts.push(_split(_parts[j]))
+      }
+      return new Relation(_relations[weight[i]], parts)
+    }
+  }
+  return _split(part)
 }
 
-module.exports = RuleGenerator
+/**
+ * @returns {number}
+ */
+Relation.prototype.getType = function getType () {
+  return this._type
+}
+/**
+ * @returns {Array<RuleUnit>}
+ */
+Relation.prototype.getRules = function getRules () {
+  return this.ary
+}
+
+/**
+ * 语法翻译工厂类，不可实例化
+ */
+class RuleGenerator {
+  /**
+   * 将字符串规则翻译为 RuleUnit 或 Relation 对象，供爬虫处理
+   * @param {string} str
+   * @returns {RuleUnit|Relation}
+   */
+  static generate (str) {
+    if (!str || str.trim() === '') return null
+    return Relation.split(str)
+  }
+  /**
+   * 判断语法单元是否为关系对象
+   * @param {{_type: string}} obj 包含 _type 字段的语法单元
+   * @returns {Boolean}
+   */
+  static isRelation (obj) {
+    return obj._tag === 'relation'
+  }
+  /**
+   * 判断语法单元是否为元规则
+   * @param {{_type: string}} obj
+   * @returns {Boolean}
+   */
+  static isRuleUnit (obj) {
+    return obj._tag === 'ruleunit'
+  }
+}
+
+export default RuleGenerator
+export {
+  RuleUnit,
+  Relation,
+  flags as RuleFlags
+}

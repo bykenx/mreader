@@ -1,5 +1,5 @@
 <template>
-  <div id="app-wrapper" class="md-layout-column">
+  <div id="app-wrapper" class="md-layout-column" :class="'page-' + page">
     <!-- 头部导航栏 -->
     <md-toolbar class="md-primary">
       <slot name="header"></slot>
@@ -20,6 +20,17 @@
   </div>
 </template>
 
+<script>
+  export default {
+    props: {
+      page: {
+        type: String,
+        default: 'default'
+      }
+    }
+  }
+</script>
+
 <style lang="css">
   .md-drawer {
     width: 260px;
@@ -32,5 +43,17 @@
     padding: 16px;
     display: flex;
     flex-wrap: wrap;
+  }
+  #app {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+  #app-wrapper {
+    position: relative;
+    height: 100%;
+    width: 100%;
   }
 </style>

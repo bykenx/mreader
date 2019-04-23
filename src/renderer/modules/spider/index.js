@@ -1,7 +1,23 @@
-var urllib = require('./urllib')
-var soup = require('./soup')
+import urllib from './internal/urllib'
+import { decode } from 'modules/util'
+import Soup from './internal/soup'
 
-urllib.get('https://www.qq.com/?fromdefault', (err, response, body) => {
-    var s = soup(body)
-    console.log(s.find('a'))
-})
+/**
+ * 爬虫框架的总入口
+ * 参数 url 为请求的地址
+ * @param {string} url
+ * @returns {Promise<Soup>}
+ */
+function begin (url) {
+  return new Promise((resolve, reject) => {
+    urllib.get(url, (err, response, body) => {
+      if (err) {
+        reject(err)
+      }
+      let encoding = urllib.decoder.guessEncoding(response.headers)
+      resolve(new Soup(decode(body, encoding)))
+    })
+  })
+}
+
+export default begin

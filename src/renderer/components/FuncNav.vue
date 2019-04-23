@@ -1,12 +1,12 @@
 <template>
   <md-list>
-    <router-link to="/">
+    <router-link to="main">
       <md-list-item>
         <md-icon>menu</md-icon>
         <span class="md-list-item-text">我的书架</span>
       </md-list-item>
     </router-link>
-    <router-link to="booksrc">
+    <router-link to="source">
       <md-list-item>
         <md-icon>send</md-icon>
         <span class="md-list-item-text">
@@ -16,14 +16,21 @@
     </router-link>
     <router-link to="settings">
       <md-list-item>
-        <md-icon>delete</md-icon>
+        <md-icon>settings</md-icon>
         <span class="md-list-item-text">设置
+          </span>
+      </md-list-item>
+    </router-link>
+    <router-link to="search">
+      <md-list-item>
+        <md-icon>search</md-icon>
+        <span class="md-list-item-text">搜索图书
           </span>
       </md-list-item>
     </router-link>
     <router-link to="about">
       <md-list-item>
-        <md-icon>error</md-icon>
+        <md-icon>info</md-icon>
         <span class="md-list-item-text">关于
         </span>
       </md-list-item>

@@ -1,39 +1,47 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
-import MainPage from 'pages/MainPage'
-import ReaderPage from 'pages/ReaderPage'
-import SettingsPage from 'pages/SettingsPage'
-import AboutPage from 'pages/AboutPage'
-import SourceDetail from 'pages/SourceDetail'
-
 Vue.use(Router)
 
 export default new Router({
   mode: 'hash',
   routes: [{
     path: '/',
+    redirect: '/main'
+  },
+  {
+    path: '/main',
     name: 'main',
-    component: MainPage
+    component: require('pages/MainPage').default
   },
   {
     path: '/about',
     name: 'about',
-    component: AboutPage
+    component: require('pages/AboutPage').default
   },
   {
     path: '/settings',
     name: 'settings',
-    component: SettingsPage
+    component: require('pages/SettingsPage').default
   },
   {
     path: '/reader/:id',
     name: 'reader',
-    component: ReaderPage
+    component: require('pages/ReaderPage').default
+  },
+  {
+    path: '/source',
+    name: 'source',
+    component: require('pages/BookSrcPage').default
   },
   {
     path: '/source/:id',
-    name: 'source',
-    component: SourceDetail
+    name: 'sourcedetail',
+    component: require('pages/SourceDetail').default
+  },
+  {
+    path: '/search',
+    name: 'search',
+    component: require('pages/BookSearchPage').default
   }]
 })

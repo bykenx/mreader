@@ -13,21 +13,15 @@
   import 'vue-material/dist/theme/default.css'
   // Material Icons
   import 'material-design-icons/iconfont/material-icons.css'
+  // Awesome icon
+  import 'font-awesome/css/font-awesome.css'
   // common
   import '@/assets/css/common.css'
 
-  // components
-  import Register from '@/components/register'
-  // router
-  import router from '@/router'
-
   Vue.use(VueMaterial)
-  
-  Register.registerComponents()
 
   export default {
-    name: 'mreader',
-    router
+    name: 'MReader'
   }
 </script>
 
