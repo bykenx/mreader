@@ -137,11 +137,11 @@ function type2Sel (_type) {
 
 class RuleUnit {
   constructor (_type, ins, value, idx) {
+    this._tag = 'ruleunit'
     this._type = _type
     this.ins = ins
     this.value = value
     this.idx = isEmpty(idx) ? null : idx
-    this._tag = 'ruleunit'
   }
   getType () {
     return this._type

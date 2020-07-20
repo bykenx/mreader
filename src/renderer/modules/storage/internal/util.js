@@ -66,6 +66,30 @@ function readFile (fullpath) {
   })
 }
 
+/**
+ * @param {string} fullpath
+ * @param {any} data
+ */
+function saveFile (fullpath, data) {
+  return new Promise((resolve, reject) => {
+    fs.open(fullpath, 'w', (err, fd) => {
+      if (err) {
+        reject(err)
+      }
+      fs.write(
+        fd,
+        data,
+        (err, written, buffer) => {
+          if (err) {
+            reject(err)
+          }
+          resolve(written)
+        }
+      )
+    })
+  })
+}
+
 class ContextPath {
   constructor (currentPath) {
     this.currentPath = currentPath
@@ -147,6 +171,8 @@ function stringify (data) {
         }
       }
       break
+    case 'array':
+      return data
     case 'string':
       return data
     default:
@@ -162,6 +188,7 @@ function parse (data) {
 export {
   getPath,
   readFile,
+  saveFile,
   mkdir,
   touch,
   parse,

@@ -28,13 +28,12 @@ import StoreEnable from './internal/base'
  * @property {Boolean} enabled
  */
 class BookSource extends StoreEnable {
-  /* eslint-disable-next-line */
-  static __db_name = 'booksource'
+  static __DB_NAME = 'booksource'
   /**
    * @param {{}} props
    */
   constructor (props) {
-    super()
+    super(props)
     this._id = props._id || ''
     this.url = props.url
     this.name = props.name
@@ -57,7 +56,7 @@ class BookSource extends StoreEnable {
     this.chapterUrlRule = props.chapterUrlRule
     this.chapterListRule = props.chapterListRule
     this.chapterNameRule = props.chapterNameRule
-    this.contentUrlRule = props.chapterUrlRule
+    this.contentUrlRule = props.contentUrlRule
     this.contentRule = props.contentRule
     this.enabled = props.enabled || false
   }

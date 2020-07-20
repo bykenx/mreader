@@ -35,5 +35,10 @@
         </span>
       </md-list-item>
     </router-link>
+    <md-list-item>
+      <md-icon>close</md-icon>
+      <span class="md-list-item-text">关闭应用
+      </span>
+    </md-list-item>
   </md-list>
 </template>

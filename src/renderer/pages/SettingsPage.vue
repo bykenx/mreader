@@ -10,6 +10,14 @@
       </md-toolbar>
       <func-nav></func-nav>
     </md-drawer>
+
+    <div slot="content" class="settings-area">
+      <div>
+        <label for=""></label>
+        <md-switch v-model="dimspace">自动调整段前间距</md-switch>
+        <settings-drawer />
+      </div>
+    </div>
   </layout>
 </template>
 
@@ -18,8 +26,23 @@ export default {
   name: 'SettingsPage',
   data () {
     return {
-      showNavigation: false
+      showNavigation: false,
+      dimspace: false
     }
   }
 }
 </script>
+
+<style>
+  .input-group {
+    border: 1px solid #ccc;
+    padding-left: 10px
+  }
+  .input-group > * {
+    display: block
+  }
+  .settings-area {
+    padding-left: 30px;
+    padding-right: 30px
+  }
+</style>

@@ -18,6 +18,9 @@ Register.registerComponents()
 /* eslint-disable no-new */
 new Vue({
   components: { App },
+  mounted () {
+    this.$store.dispatch('loadSources')
+  },
   router,
   store,
   template: '<App/>'

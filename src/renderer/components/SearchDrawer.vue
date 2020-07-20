@@ -6,7 +6,7 @@
 
 <script>
 export default {
-  name: 'SearchBar',
+  name: 'SearchDrawer',
   data () {
     return {
       inputSource: ''

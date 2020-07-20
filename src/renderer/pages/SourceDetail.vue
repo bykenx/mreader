@@ -43,12 +43,17 @@
       <md-field>
         <label>书名规则</label>
         <md-input v-model="source.searchNameRule"></md-input>
-        <span class="md-helper-text">书源规则(searchNameRule)</span>
+        <span class="md-helper-text">书名规则(searchNameRule)</span>
+      </md-field>
+      <md-field>
+        <label>链接地址规则</label>
+        <md-input v-model="source.searchUrlRule"></md-input>
+        <span class="md-helper-text">链接地址规则(searchUrlRule)</span>
       </md-field>
       <md-field>
         <label>作者规则</label>
         <md-input v-model="source.searchAuthorRule"></md-input>
-        <span class="md-helper-text">书源规则(searchAuthorRule)</span>
+        <span class="md-helper-text">作者规则(searchAuthorRule)</span>
       </md-field>
       <md-field>
         <label>封面规则</label>
@@ -58,7 +63,7 @@
       <md-field>
         <label>类型规则</label>
         <md-input v-model="source.searchKindRule"></md-input>
-        <span class="md-helper-text">书源规则(searchKindRule)</span>
+        <span class="md-helper-text">类型规则(searchKindRule)</span>
       </md-field>
       <md-field>
         <label>最新章节规则</label>
@@ -133,7 +138,6 @@
 
 <script>
   import BookSource from 'modules/storage/BookSource'
-  import { trace } from 'modules/util'
   export default {
     name: 'sourcedetail',
     data () {
@@ -146,18 +150,18 @@
       // id 非 0 表示编辑现有的源
       // id 为 0 则表示新建源，则没有任何操作
       if (_id !== '0') {
-        BookSource.getById(_id).then((err, data) => {
-          trace(err)
-          this.source = data[0]
-        })
+        BookSource.getById(_id)
+          .then(data => {
+            this.source = data
+          })
       }
     },
     methods: {
       save () {
         // 保存到本地数据库
         BookSource.save(this.source)
-          .then((err, e) => {
-            console.log(err)
+          .then(_ => {
+            this.$store.dispatch('loadSources')
           })
       }
     }

@@ -27,8 +27,8 @@ function decode (bytes, encoding) {
 
 /**
  * 将字符串编码为 bytes 的工具函数
- * @param {string} str
- * @param {string} encoding
+ * @param {string} str 原始字符串
+ * @param {string} encoding 编码方式
  * @returns {Buffer}
  */
 function encode (str, encoding) {
@@ -39,7 +39,7 @@ function encode (str, encoding) {
 /**
  * 将 n 个长度为 m 的数组转化为 m 个 长度为 n 的数组
  * @param {Array<Array>} obj
- * @returns {Array<any>}
+ * @returns {Array<Array>}
  */
 function zip (obj) {
   let res = []
@@ -56,6 +56,68 @@ function zip (obj) {
 }
 
 /**
+ * 简单的 Json 文件格式化工具函数
+ * @param {String} source 原始文本
+ * @param {Boolean} transtab2space 是否以两个空格替换 Tab 键
+ */
+function simpleJsonFormat (source, transtab2space) {
+  let tab = transtab2space ? '  ' : '\t'
+  let depthCount = 0
+  let result = ''
+  let keys = source.split('')
+  function appendTab () {
+    depthCount += 1
+    return normalTab()
+  }
+  function popTab () {
+    depthCount -= 1
+    return normalTab()
+  }
+  function normalTab () {
+    let res = ''
+    for (let i = 0; i < depthCount; i++) {
+      res += tab
+    }
+    // console.log("\"", res, "\"")
+    return res
+  }
+  while (true) {
+    let key = keys.shift()
+    switch (key) {
+      case '[':
+        result += '\n'
+        result += appendTab()
+        result += key
+        break
+      case '{':
+        result += key + '\n'
+        result += appendTab()
+        break
+      case ',':
+        result += key + '\n'
+        result += normalTab()
+        break
+      case '}':
+        result += '\n'
+        result += popTab()
+        result += key
+        break
+      case ']':
+        result += key
+        break
+      case undefined:
+        break
+      default:
+        result += key
+    }
+    if (key === undefined) {
+      break
+    }
+  }
+  return result
+}
+
+/**
  * 打印错误信息
  * @param {Error} err
  */
@@ -65,10 +127,19 @@ function trace (err) {
   }
 }
 
+function urlFormat (protocol, url) {
+  if (url.startsWith('//')) {
+    url = [protocol, url].join('')
+  }
+  return url
+}
+
 export {
   toArrayBuffer,
+  simpleJsonFormat,
   decode,
   encode,
   zip,
-  trace
+  trace,
+  urlFormat
 }

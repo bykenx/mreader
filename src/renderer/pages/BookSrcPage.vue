@@ -9,6 +9,12 @@
       <md-button class="md-icon-button" @click='goto("0")'>
         <md-icon>add</md-icon>
       </md-button>
+      <md-button class="md-icon-button" @click='importFromFile'>
+        <md-icon>more_vert</md-icon>
+      </md-button>
+      <md-button class="md-icon-button" @click='saveTemplate'>
+        <md-icon>send</md-icon>
+      </md-button>
     </div>
 
     <md-table slot="content" v-model="sources" md-card @md-selected="onSelect">
@@ -56,8 +62,8 @@
   </layout>
 </template>
 <script>
-import BookSource from 'modules/storage/BookSource'
-import { trace } from 'modules/util'
+import { BookSource, readBookSourceFromJsonFile, saveBookSourceTemplate } from 'modules/storage'
+import { FileDialogService } from '@/services'
 
 export default {
   name: 'BookSrcPage',
@@ -71,25 +77,27 @@ export default {
     }
   },
   mounted () {
-    BookSource.getAll()
-      .then((err, sources) => {
-        trace(err)
-        sources.forEach(e => {
-          let name = e.name
-          let group = e.group
-          let _id = e._id
-          this.sources.push({
-            name: name,
-            group: group,
-            _id: _id
-          })
-        })
-      })
+    this.refresh()
   },
   methods: {
+    refresh () {
+      this.sources = []
+      BookSource.getAll()
+        .then(sources => {
+          sources.forEach(e => {
+            let name = e.name
+            let group = e.group
+            let _id = e._id
+            this.sources.push({
+              name: name,
+              group: group,
+              _id: _id
+            })
+          })
+        })
+    },
     onSelect (items) {
       this.selected = items
-      console.log(items)
     },
     onCancel () {
       this.needToDel = false
@@ -126,10 +134,23 @@ export default {
     goto (_id) {
       // 查看书源详情
       this.$router.push({name: 'sourcedetail', params: {id: _id}})
+    },
+    importFromFile () {
+      let files = FileDialogService.showOpenDialog()
+      if (files) {
+        readBookSourceFromJsonFile(files[0])
+          .then(_ => {
+            this.$store.dispatch('loadSources')
+            this.refresh()
+          })
+      }
+    },
+    saveTemplate () {
+      let path = FileDialogService.showSaveDialog('template.json')
+      if (path) {
+        saveBookSourceTemplate(path)
+      }
     }
   }
 }
 </script>
-
-<style>
-</style>

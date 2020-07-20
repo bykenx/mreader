@@ -19,16 +19,16 @@
     <!-- 菜单结束 -->
 
     <!-- 右侧抽屉 -->
-    <md-drawer class="md-right" :md-active.sync="showOptions" slot="option-menu">
+    <md-drawer md-right :md-active.sync="showOptions" slot="option-menu">
       <md-toolbar class="md-transparent" md-elevation="0">
         <span class="md-title">选择一个操作</span>
       </md-toolbar>
       <md-list>
-        <md-list-item>
+        <md-list-item @click="addLocalBook">
           <md-icon class="md-primary">add</md-icon>
           <span class="md-list-item-text">本地图书</span>
         </md-list-item>
-        <md-list-item>
+        <md-list-item @click="clearCache">
           <md-icon class="md-primary">clear</md-icon>
           <span class="md-list-item-text">清除缓存</span>
         </md-list-item>
@@ -43,44 +43,81 @@
       </md-list>
     </md-drawer>
     <!-- 右侧抽屉结束 -->
-    <book-shelf slot='content' v-model='books' :clicked='open'></book-shelf>
+    <md-content slot="content">
+      <book-shelf v-model='books' :clicked='open' index='_id' />
+    </md-content>
+    <!-- 确认框 -->
+    <md-dialog-confirm slot="content"
+      :md-active.sync="showClearCacheConfirm"
+      md-title="清除缓存"
+      md-content="是否清除本地的图书缓存？"
+      md-confirm-text="确认"
+      md-cancel-text="取消"
+      @md-confirm="onClearCacheConfirm" />
   </layout>
 </template>
 
 <script>
 import Book from 'modules/storage/Book'
-import History from 'modules/storage/History'
-import { remote } from 'electron'
+import { EpubReader } from 'modules/reader'
+import { FileDialogService } from '@/services'
 
-remote.powerMonitor.on('on-battery', ev => {
-  console.log(ev)
-})
-let book = new History('book')
 export default {
   name: 'MainPage',
   data () {
     return {
       showNavigation: false,
       showOptions: false,
+      showClearCacheConfirm: false,
       books: []
     }
   },
   mounted () {
-    window.a = this.$store
-    this.$store.dispatch('loadSources')
     Book.getAll()
-      .then((err, all) => {
-        if (!err) {
-          this.books = book.all()
-        }
+      .then(books => {
+        this.books = books
       })
   },
   methods: {
     open (id) {
       this.$router.push({
         'name': 'reader',
-        'params': {id: id}
+        'params': {
+          'id': id
+        },
+        'query': {
+          'referer': 'bookshelf'
+        }
       })
+    },
+    addLocalBook () {
+      let files = FileDialogService.showOpenDialog()
+      if (files && files[0]) {
+        console.log(files[0])
+        let url = 'file://' + files[0]
+        EpubReader.getMetaInfo(url)
+          .then(metadata => {
+            let book = new Book({
+              name: metadata.name,
+              tag: [],
+              link: url,
+              chapterUrl: '',
+              updateDate: new Date(),
+              cover: '',
+              author: metadata.author,
+              introduce: metadata.description,
+              source: '',
+              charset: ''
+            })
+            book.save()
+          })
+      }
+    },
+    clearCache () {
+      this.showClearCacheConfirm = true
+    },
+    onClearCacheConfirm () {
+      alert('clear')
     }
   }
 }
@@ -97,6 +134,6 @@ export default {
   .md-content {
     padding: 16px;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: wrap
   }
 </style>

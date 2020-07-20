@@ -8,39 +8,49 @@ class BaseReader {
    */
   constructor (props) {
     props = props || {}
-    this.width = props.width || 800
-    this.height = props.height || 600
   }
   /**
+   * 打开图书
    * @param {any} res
    */
   open (res) {
   }
   /**
+   * 将内容渲染至界面
    * @param {HTMLElement} el
    */
   render (el) {}
   /**
+   * 窗口大小变化
    * @param {number} w
    * @param {number} h
    */
   resize (w, h) {}
   /**
+   * 添加书签
    * @param {string} name
    * @param {string} bookmark
    */
   addBookMark (name, bookmark) {}
   /**
-   * @returns {number}
+   * 获取阅读进度
+   * @returns {{page: Number, total: Number, name?:String}}
    */
   getProcess () {}
   /**
-   * @param {any} _id
+   * 翻页：上一页
+   * @param {Boolean} first 翻到第一页
    */
-  jumpTo (_id) {}
-  getChapters () {}
-  prev () {}
-  next () {}
+  prev (first) {}
+  /**
+   * 翻页：下一页
+   * @param {Boolean} last 翻到最后一页
+   */
+  next (last) {}
+  /**
+   * 翻页后的更新操作
+   */
+  update () {}
 }
 
 export default BaseReader

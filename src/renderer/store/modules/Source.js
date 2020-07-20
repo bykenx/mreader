@@ -16,10 +16,8 @@ const mutations = {
 const actions = {
   loadSources ({ commit }) {
     BookSource.getAll()
-      .then((err, all) => {
-        if (!err) {
-          commit('LOAD_SOURCES', all)
-        }
+      .then(sources => {
+        commit('LOAD_SOURCES', sources)
       })
   }
 }

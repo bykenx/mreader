@@ -11,8 +11,7 @@
         :md-open-on-focus='false'
         v-model='name'
         md-layout='box'
-        @md-changed='changedInput'
-        @md-selected='selectedOption'>
+        @md-changed='changedInput'>
         <label>输入书名</label>
       </md-autocomplete>
     </div>
@@ -70,6 +69,7 @@
 </template>
 <script>
 import History from 'modules/storage/History'
+import { BookService } from '@/services'
 
 let store = new History('book')
 
@@ -78,31 +78,33 @@ export default {
   data () {
     return {
       name: null,
-      options: ['斗罗大陆'],
+      options: [],
       results: null,
       showDetails: false,
       currentSelect: null
     }
   },
+  computed: {
+    sources () {
+      // 从 state 获取已经加载的源
+      return this.$store.state.Source.sources
+    }
+  },
   mounted () {
-    // 从 state 获取已经加载的源
-    this.sources = this.$store.state.Source.sources
   },
   methods: {
     changedInput (data) {
-      this.options.shift()
-      this.options.unshift(data)
-    },
-    selectedOption (data) {
+      if (!data || data === '') {
+        return
+      }
       this.search(data)
     },
     search (name) {
-      console.log(name)
       // 清空搜索结果
       this.results = []
       for (let i in this.sources) {
         let current = this.sources[i]
-        console.log(current)
+        window.current = current
         current.searchBook(name)
           .then(data => {
             data.forEach(e => {
@@ -118,35 +120,33 @@ export default {
       this.showDetails = true
     },
     add (book) {
-      console.log(store)
-      store.save(book)
+      BookService.save({
+        name: book.name,
+        link: book.link,
+        source: book.source,
+        cover: book.cover,
+        author: book.author
+      })
     },
     gotoReader (book) {
       // 保存浏览记录并获取id
       let stored = store.save(book)
-      console.log(stored)
       // 跳转到阅读器页面
       this.$router.push({
         'name': 'reader',
-        'params': {
-          'id': stored.$id
-        }
+        'params': { 'id': stored.$id },
+        'query': { 'referer': 'history' }
       })
     }
   }
 }
 </script>
 
-<style scoped>
-  p {
-    line-height: 1
-  }
-  .md-toolbar {
-    position: fixed
-  }
-  .md-content {
-    position: absolute;
-    top: 64px
+<style>
+  p { line-height: 1 }
+  #app-toolbar {
+    position: fixed;
+    top: 0
   }
   .md-card {
     margin: 4px;

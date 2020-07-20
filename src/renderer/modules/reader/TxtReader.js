@@ -1,4 +1,4 @@
-import BaseReader from '../internal/BaseReader'
+import BaseReader from './internal/BaseReader'
 
 /** 编译之后的规则
  * @type {{String: String}}
@@ -6,9 +6,10 @@ import BaseReader from '../internal/BaseReader'
 let _rules = []
 
 /**
+ * 检测是普通的替换内容还是特殊规则的标识
  * @type {RegExp}
  */
-let flags = /^\$([A-Za-z])(.+)/
+let flags = /^\$([A-Za-z])(.*)/
 
 /**
  * @param {String} tagname
@@ -32,14 +33,18 @@ function getRemoved (tagname, global, ignored, n) {
   if (tagname.endsWith('/')) {
     // 单闭和的标签
     simpleClosure = true
-    tagname = tagname.replace('/', '')
+    tagname = tagname.replace(/\/$/, '')
   }
   pattern += `(<${tagname}[^>]*>)`
   if (n && n !== '') {
     if (n === 'n') {
       pattern += `(?:(<${tagname}[^>]*>)+)`
-    } else if (n instanceof Number) {
-      pattern += `(?:(<${tagname}[^>]*>){${n - 1}})`
+    } else {
+      // 非数字的 n parseInt 后将会变成 NaN
+      n = parseInt(n)
+      if (n instanceof Number) {
+        pattern += `(?:(<${tagname}[^>]*>){${n - 1}})`
+      }
     }
     // 去除重复的标签
     repalced = '$1'
@@ -57,16 +62,28 @@ function getRemoved (tagname, global, ignored, n) {
  * @param {Boolean} global
  * @param {Boolean} ignored
  */
-function getReplaced (tagname, repalced, global, ignored) {
+function getReplaced (tagname, replaced, global, ignored) {
   let flags = ''
   global = global || true
   ignored = ignored || true
   // 替换成匹配的内容加自定义内容
-  repalced = '$1' + repalced
+  let r = /(?:^\^([^$,]+)(?:,|[^$]$))?(?:([^^$]+)\$$)?/
+  let matcher = r.exec(replaced)
+  replaced = '$1' // 标准替换，将外部的标签去掉
+  if (matcher) {
+    // 在前面加内容
+    if (matcher[1]) {
+      replaced = matcher[1] + replaced
+    }
+    // 在后面加内容
+    if (matcher[2]) {
+      replaced = replaced + matcher[2]
+    }
+  }
   flags += global ? 'g' : ''
   flags += ignored ? 'i' : ''
   let pattern = `<${tagname}[^>]*>((?:[^<]*))<\\/${tagname}>`
-  return [new RegExp(pattern, flags), repalced]
+  return [new RegExp(pattern, flags), replaced]
 }
 
 /**
@@ -94,9 +111,10 @@ let rule = {
   'img': '$d', // 去除图片
   'div': '$r', // 去除 div 包裹
   'span': '$r', // 去除 span 包裹
-  'p': '$r<br>',
-  'br/': '$dn',
-  '<!--[^-]*-->': ''
+  // p 标签添加段落缩进，添加 br 换行
+  'p': '$r^&ensp;&ensp;&ensp;&ensp;,<br>$',
+  'br/': '$dn', // 去除多余的 br 标签
+  '<!--[^-]*-->': '' // 去除网页中的注释
 }
 
 /**
@@ -147,52 +165,89 @@ class TxtReader extends BaseReader {
   constructor (props) {
     props = props || {}
     super(props)
-    this.reader = document.createElement('div')
-    this.offset = 0
-    this.lines = 0
-    this.lh = 0
-    this.slines = 0
+    /**
+     * 显示书籍内容的容器
+     * @type {HTMLElement}
+     */
+    this._self = document.createElement('div')
+    this._self.style.lineHeight = 1.5
+    this._self.style.transition = 'margin-top .2s ease-in-out'
+    this.container = {
+      offset: 0, // marginTop偏移值
+      slines: 0, // 当前屏幕行数(screen lines)
+      lines: 0, // 总行数
+      lh: 0, // 行高,
+      sh: 0, // 屏幕显示的内容高度
+      el: null
+    }
+    this.page = 1
+    this.total = 0
   }
   open (content) {
     this.content = content
-    this.reader.innerHTML = processContent(this.content)
-    this.reader.style.lineHeight = 1.5
-    this.reader.style.fontSize = '18px'
-    let {lines, lh, slines} = screenLines(this.container, this.reader)
-    this.offset = 0
-    this.lines = lines
-    this.lh = lh
-    this.slines = slines
+    this._self.innerHTML = processContent(this.content)
+    this.resize()
+    this.page = 1
     this.update()
   }
+  /** @param {HTMLElement} el */
   render (el) {
-    el.appendChild(this.reader)
-    this.container = el
+    if (!this.container.el) {
+      this.container.el = el
+      this.container.el.appendChild(this._self)
+    }
   }
-  next () {
-    if (this.offset - this.lh * this.slines > 0 - this.lines * this.lh) {
-      this.offset -= this.lh * this.slines
+  next (last) {
+    if (last) {
+      this.page = this.total
+      this.update()
+      return true
+    }
+    if (this.page < this.total) {
+      this.page += 1
       this.update()
       return true
     }
     return false
   }
-  prev () {
-    if (this.offset + this.lh * this.slines <= 0) {
-      this.offset += this.lh * this.slines
+  prev (first) {
+    if (first) {
+      this.page = 1
+      this.update()
+      return true
+    }
+    if (this.page > 1) {
+      this.page -= 1
       this.update()
       return true
     }
     return false
+  }
+  addBookMark (name, bookmark) {
+  }
+  getProcess () {
+    return {
+      page: this.page,
+      total: this.total
+    }
   }
   update () {
-    this.reader.style.marginTop = this.offset + 'px'
+    this.container.offset = 0 - this.container.sh * (this.page - 1)
+    // 根据页数计算偏移值
+    this._self.style.marginTop = this.container.offset + 'px'
+  }
+  resize () {
+    let {lines, lh, slines} = screenLines(this.container.el, this._self)
+    this.container.offset = 0
+    this.container.lines = lines
+    this.container.lh = lh
+    this.container.slines = slines
+    this.container.sh = slines * lh
+    // 计算窗口变更后的总页数
+    this.total = Math.ceil(this.container.lines / this.container.slines)
   }
 }
 
 init()
 
-export default {
-  mt: 'txt',
-  cl: TxtReader
-}
+export default TxtReader

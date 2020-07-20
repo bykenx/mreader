@@ -9,13 +9,11 @@ const flagIns = RuleFlags.ins
 const flagRelations = RuleFlags.relations
 
 /**
- * @param {}
  * @param {RuleUnit} rule
  */
 function find (content, rule) {
   let _type = rule.getType()
-  let idx = rule.idx
-  let result = null
+  let result = []
   switch (_type) {
   case flagSels.SEL_ID:
     result = resolve_sel_id(content, rule)
@@ -28,12 +26,10 @@ function find (content, rule) {
     break
   case flagSels.SEL_VAL:
     result = resolve_sel_val(content, rule)
+    break
   }
-  if (idx) {
-    // 当指定位置时，查找 index 为 idx 值的Element
-    result = result.filter(_idx => {
-      return _idx === idx
-    })
+  if (rule.idx && rule.idx > 0) {
+    result = result.filter(x => x === rule.idx - 1)
   }
   return result
 }
@@ -59,6 +55,7 @@ function resolve_sel_class (content, rule) {
     break
   default:
     selector = ''
+    break
   }
   return content.find(selector)
 }
@@ -80,6 +77,7 @@ function resolve_sel_id (content, rule) {
     break
   default:
     selector = ''
+    break
   }
   return content.find(selector)
 }
@@ -92,6 +90,7 @@ function resolve_sel_tag (content, rule) {
     break
   default:
     selector = ''
+    break
   }
   return content.find(selector)
 }
@@ -117,10 +116,11 @@ class Soup {
   }
   /** @param {RuleUnit|Relation} rule */
   startAt (rule) {
+    let that = this
     if (!rule) {
       throw Error('rule can not be null')
     }
-    let that = this
+    let items = this.findAll(rule)
     return {
       /**
        * @param {RuleUnit|Relation} rule2 
@@ -129,23 +129,24 @@ class Soup {
       find (rule2) {
         return new Promise((resolve, reject) => {
           let tasks = []
-          that.findAll(rule).then(nodes => {
-            nodes.each((_, node) => {
-              tasks.push(that.find(rule2, query(node)))
+          items
+            .then(nodes => {
+              nodes.each((_, node) => {
+                tasks.push(that.find(rule2, query(node)))
+              })
+              Promise.all(tasks)
+                .then(resolve)
+                .catch(reject)
             })
-            Promise.all(tasks).then((result) => {
-              resolve(result)
-            }).catch(e => {
-              reject(e)
-            })
-          }).catch(e => {
-            reject(e)
+            .catch(reject)
           })
-        })
       }
     }
   }
-  /** @param {RuleUnit|Relation} rule */
+  /**
+   * 查找所有匹配结果
+   * @param {RuleUnit|Relation} rule
+   */
   findAll (rule) {
     return new Promise((resolve, reject) => {
       let ctx = this._root
@@ -153,7 +154,10 @@ class Soup {
       resolve(result)
     })
   }
-  /** @param {RuleUnit|Relation} rule */
+  /**
+   * 查找单条结果
+   * @param {RuleUnit|Relation} rule
+   */
   find (rule, ctx) {
     return new Promise((resolve, reject) => {
       ctx = ctx || this.ctx
@@ -165,7 +169,7 @@ class Soup {
    * @param {RuleUnit|Relation} rule
    */
   _find (rule, ctx) {
-    // 当前规则对象为关系
+    // 当前规则为关系对象
     if (RuleGenerater.isRelation(rule)) {
       let _type = rule.getType()
       let rules = rule.getRules()
@@ -179,8 +183,7 @@ class Soup {
             return result
           }
         }
-        break
-      // 当前规则为上下级关系时，
+      // 当前规则为递进级关系时，
       // 应该根据html标签一级一级的查找
       case flagRelations.RELATION_NEXT:
         for (let idx in rules) {
@@ -188,12 +191,14 @@ class Soup {
         }
         return ctx
       }
-    // 当前关系对象为一般规则时
+    // 当前关系为一般规则对象时
     } else if (RuleGenerater.isRuleUnit(rule)) {
       return find(ctx, rule)
-    } else {
-      return ''
     }
+    // 其他情况，eg:
+    // 传入的结果为空
+    // 根据已知规则查找不到对应数据
+    return ''
   }
 }
 

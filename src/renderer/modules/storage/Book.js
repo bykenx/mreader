@@ -12,37 +12,43 @@ var BookTypes = {
  * @property {string} _id
  * @property {string} name
  * @property {string} tag
- * @property {string} srcUrl
+ * @property {string} link
  * @property {string} chapterUrl
  * @property {number} updateDate
  * @property {string} cover
  * @property {string} author
  * @property {string} introduce
- * @property {string} origin
+ * @property {string} source
  * @property {string} charset
  * @property {number} _type
  */
 class Book extends StoreEnable {
-  /* eslint-disable-next-line */
-  static __db_name = 'book'
+  static __DB_NAME = 'book'
   /**
    * @param {{}} props
    */
   constructor (props) {
-    super()
-    this._id = props._id || null
+    super(props)
+    this._id = props._id || ''
     this.name = props.name
     this.tag = props.tag
-    this.src = props.src || ''
+    this.link = props.link || ''
     this.chapterUrl = props.chapterUrl
     this.updateDate = props.updateDate
     this.cover = props.cover
     this.author = props.author
     this.introduce = props.introduce
-    this.origin = props.origin
+    this.source = props.source
     this.charset = props.charset
-    this._type = this.srcUrl.startsWith('http') ? BookTypes.ONLINE_BOOK : BookTypes.LOCAL_BOOK
+    this._type = this.link.startsWith('http') ? BookTypes.ONLINE_BOOK : BookTypes.LOCAL_BOOK
+  }
+  isLocal () {
+    return this._type === BookTypes.LOCAL_BOOK
   }
 }
 
 export default Book
+
+export {
+  BookTypes
+}

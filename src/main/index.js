@@ -1,6 +1,8 @@
 'use strict'
 
 import { app, BrowserWindow } from 'electron'
+import path from 'path'
+import IPC from './ipc'
 
 /**
  * Set `__static` path to static files in production
@@ -10,21 +12,32 @@ if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
 
+// 开启 ipc
+IPC.support()
+
 let mainWindow
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 
 function createWindow () {
+  const windowOptions = {
+    height: 563,
+    width: 1000,
+    useContentSize: true,
+    // frame: false,
+    // titleBarStyle: 'customButtonsOnHover',
+    webPreferences: {webSecurity: false}
+  }
+
+  if (process.platform === 'linux') {
+    windowOptions.icon = path.join(__dirname, '/assets/app-icon/png/512.png')
+  }
+
   /**
    * Initial window options
    */
-  mainWindow = new BrowserWindow({
-    height: 563,
-    useContentSize: true,
-    width: 1000,
-    webPreferences: {webSecurity: false}
-  })
+  mainWindow = new BrowserWindow(windowOptions)
 
   mainWindow.loadURL(winURL)
 

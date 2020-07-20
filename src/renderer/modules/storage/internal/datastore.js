@@ -8,24 +8,19 @@ class DB {
   }
 
   /**
-     *
-     * @param {{[x: string]: string}} db
-     */
+   * @param {{[x: string]: string}} db
+   */
   createOrReadDatabase (db) {
     db = db || {}
-    var existsAll = true
     var database = {}
-    for (let part in db) {
-      existsAll &= this.dbDir.exists(db[part])
-    }
-    if (!existsAll) {
-      for (let part in db) {
-        this.dbDir.touch(db[part])
+    for (let idx in db) {
+      if (!this.dbDir.exists(db[idx])) {
+        this.dbDir.touch(db[idx])
       }
     }
-    for (let part in db) {
-      database[part] = new DataStore({
-        filename: this.dbDir.join(db[part]),
+    for (let idx in db) {
+      database[idx] = new DataStore({
+        filename: this.dbDir.join(db[idx]),
         autoload: true
       })
     }
@@ -49,7 +44,7 @@ class DB {
 const db = new DB()
 
 export default db.init({
-  chapter: 'chapter.db',
+  bookmark: 'bookmark.db',
   book: 'book.db',
   booksource: 'booksource.db'
 })
