@@ -1,4 +1,4 @@
-﻿import Vue from 'vue'
+import Vue from 'vue'
 import Layout from './layout'
 import FuncNav from './FuncNav'
 import BookShelf from './BookShelf'
